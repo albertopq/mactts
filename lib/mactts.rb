@@ -17,7 +17,7 @@ require 'tempfile'
 
 module Mac
   class TTS
-    attr_accessor :say_command, :voice, :tempfile
+    attr_accessor :say_command, :voice, :tempfile, :export_path
     
     class SayCommandNotFoundException < Exception; end
     class InvalidVoiceException < Exception; end
@@ -32,6 +32,7 @@ module Mac
       @say_command = opts[:say_command] || '/usr/bin/say'
       @tempfile    = opts[:tempfile]    || 'mactts'
       @voice       = opts[:voice]       || :fred
+      @export_path = opts[:export_path] || './output.aiff'
     end
   
     # Class method to make it easy to use the defaults
@@ -39,21 +40,22 @@ module Mac
     # 
     # Usage:
     #   Mac::TTS.say('This is my text!', :alex)
-    def self.say(text, voice = :fred)
+    def self.say(text, voice = :fred, export = false)
       mactts = TTS.new(:voice => voice)
-      mactts.say(text)
+      mactts.say(text, export)
     end
-  
+
+    
     # Use TTS to speak your text, with the voice specified
     # in @voice.
     #
     # Usage:
     #    mactts = Mac::TTS.new
     #    mactts.say('This is my text!')
-    def say(text)
+    def say(text, export = false)
       check_for_command
       validate_voice
-      perform_say(text, @voice)
+      perform_say(text, @voice, export)
     end
 
     # An array of valid voice names recognized by the say command
@@ -88,15 +90,17 @@ module Mac
     end
 
     # Write the temp file out and call the say command
-    def perform_say(text, voice)
+    def perform_say(text, voice, export)
       temp_file = Tempfile.new(@tempfile)
       tf = File.new(temp_file.path, "w+")
       tf.puts(text)
       tf.close
-      `cat #{temp_file.path} | #{@say_command} -v #{voice.to_s}`
+      export_command = export ? "-o #{@export_path}" : ""
+      `cat #{temp_file.path} | #{@say_command} -v #{voice.to_s} #{export_command}`
       result = ($? == 0)
-      temp_file.unlink      
-      return result
+      temp_file.unlink
+      return export ? @export_path : result
     end
+
   end
 end

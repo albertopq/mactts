@@ -14,6 +14,13 @@ describe Mac::TTS, "When using the class method" do
     Mac::TTS.say(@sample_text, :alex).should == true
   end
   
+  it "should return the default export path if export flag = true" do
+    default_export_path = Mac::TTS.new.export_path
+    Mac::TTS.say(@sample_text, :alex, true).should == default_export_path
+    File.exists?(default_export_path).should == true
+    `rm #{default_export_path}`
+  end
+  
   it "should have an array of valid voices" do
     Mac::TTS.valid_voices.length.should > 0
   end
@@ -52,5 +59,13 @@ describe Mac::TTS, "When using an instantiated object" do
   it "should return false if a valid command that is not say is specified" do
     @mactts.say_command = '/usr/bin/env'
     @mactts.say(@sample_text).should == false
+  end
+  
+  it "should export a file in the export_path specified when it is set" do
+    new_export_path = '/tmp/test.aiff'
+    @mactts.export_path = new_export_path
+    @mactts.say(@sample_text, true).should == new_export_path
+    File.exists?(new_export_path).should == true
+    `rm #{new_export_path}`
   end
 end
