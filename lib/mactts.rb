@@ -26,7 +26,8 @@ module Mac
     # that can be overriden with the opts hash:
     #   opts = { :say_command  => '/path/to/say', 
     #            :tempfile     => 'tempfile_name',
-    #            :voice        => :valid_voice
+    #            :voice        => :valid_voice,
+    #            :export_path        => '/tmp/my_file.aiff'
     #   }
     def initialize(opts = {})
       @say_command = opts[:say_command] || '/usr/bin/say'
@@ -89,7 +90,8 @@ module Mac
       TTS.valid_voices.include?(@voice)
     end
 
-    # Write the temp file out and call the say command
+    # Write the temp file out and call the say command.
+    # If the export flag is enabled, it will export to a file instead. 
     def perform_say(text, voice, export)
       temp_file = Tempfile.new(@tempfile)
       tf = File.new(temp_file.path, "w+")
